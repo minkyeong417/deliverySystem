@@ -23,6 +23,7 @@ typedef struct {
 
 
 static storage_t** deliverySystem; 			//storage_t< *p <**deliverySystem: double pointer
+//deliverysystem=systemsize[0]*systemsize[1] = storage essence
 static int storedCnt = 0;					//number of cells occupied
 static int systemSize[2] = {0, 0};  		//row/column of the delivery system
 static char masterPassword[PASSWD_LEN+1];	//master password
@@ -71,6 +72,11 @@ static int inputPasswd(int x, int y) {
 //char* filepath : filepath and name to write
 //return : 0 - backup was successfully done, -1 - failed to backup
 int str_backupSystem(char* filepath) {
+	FILE *fp;
+	fp=fopen(filepath,"w");
+	
+	fprintf(fp,"storage_t[]");
+	fclose(fp);
 	
 }
 
@@ -135,7 +141,7 @@ int str_checkStorage(int x, int y) {
 		return -1;
 	}
 	
-	return deliverySystem[x][y].cnt;	
+	return deliverySystem[x][y].cnt;//deliverysystem each cell is storage_t. its member is cnt	
 }
 
 
