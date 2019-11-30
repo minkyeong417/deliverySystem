@@ -19,10 +19,10 @@ typedef struct {
 	char passwd[PASSWD_LEN+1];
 	
 	char *context;
-} storage_t;
+} storage_t; //storage cell
 
 
-static storage_t** deliverySystem; 			//deliverySystem
+static storage_t** deliverySystem; 			//storage_t< *p <**deliverySystem: double pointer
 static int storedCnt = 0;					//number of cells occupied
 static int systemSize[2] = {0, 0};  		//row/column of the delivery system
 static char masterPassword[PASSWD_LEN+1];	//master password
@@ -47,7 +47,7 @@ static void printStorageInside(int x, int y) {
 }
 
 //initialize the storage
-//set all the member variable as an initial value
+//set all the member variable of storage_t as an initial value
 //and allocate memory to the context pointer
 //int x, int y : cell coordinate to be initialized
 static void initStorage(int x, int y) {
