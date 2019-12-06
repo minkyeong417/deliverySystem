@@ -1,9 +1,3 @@
-//처음에만  하드에서 program에 불러오고
-
-//pointer ->
-//initial 함수는 storage.c 내에서 쓰임 
-//backup 덮어쓰기. 바뀔때 마다
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,8 +23,7 @@ typedef struct {
 } storage_t; //storage cell
 
 
-static storage_t** deliverySystem; 			//storage_t< *p <**deliverySystem: double pointer
-//deliverysystem=systemsize[0]*systemsize[1] = storage essence
+static storage_t** deliverySystem; 			//storage_t< *storage_t <**deliverySystem: double pointer
 static int storedCnt = 0;					//number of cells occupied
 static int systemSize[2] = {0, 0};  		//row/column of the delivery system
 static char masterPassword[PASSWD_LEN+1];	//master password
@@ -60,11 +53,12 @@ static void printStorageInside(int x, int y) {
 //int x, int y : cell coordinate to be initialized
 static void initStorage(int x, int y) {
 	deliverySystem[x][y].building=0;
-	deliverySystem[x][y].cnt=0;
-	deliverySystem[x][y].context=malloc(100*sizeof(char));
+	deliverySystem[x][y].cnt=0;//the cell is empty
+	deliverySystem[x][y].context=malloc(100*sizeof(char));//allocate 100chars to context
 	deliverySystem[x][y].room=0;
-	int i;
-	for(i=0;i<PASSWD_LEN+1;i++)
+	
+	int i;//i is to set ith element of passwd
+	for(i=0;i<PASSWD_LEN+1;i++) //set the passwd all 0
 	deliverySystem[x][y].passwd[i]='\0';
 }
 
@@ -72,9 +66,9 @@ static void initStorage(int x, int y) {
 //int x, int y : cell for password check
 //return : 0 - password is matching, -1 - password is not matching
 static int inputPasswd(int x, int y) {
-	char pass[PASSWD_LEN+1];// password just input
+	char pass[PASSWD_LEN+1];// password just input by user
 	scanf("%s",pass);
-	if (strcmp(pass,deliverySystem[x][y].passwd)==0){
+	if (strcmp(pass,deliverySystem[x][y].passwd)==0){ //compare the password input and the correct passwd
 		return 0;
 	}
 	
@@ -92,17 +86,19 @@ static int inputPasswd(int x, int y) {
 //return : 0 - backup was successfully done, -1 - failed to backup
 int str_backupSystem(char* filepath) {
 	FILE *fp;
-	fp=fopen(filepath,"w");
+	fp=fopen(filepath,"w");//open the file in writing mode
+	
 	if(fp==NULL)
 		return -1;
 		
 	int i,j;
-	fprintf(fp,"%d %d\n %s\n ",systemSize[0],systemSize[1],masterPassword);//row, column and masterpassword
-	for(i=0;i<systemSize[0];i++){
-		for(j=0;j<systemSize[1];j++){
-			if(deliverySystem[i][j].cnt!=0)
+	fprintf(fp,"%d %d\n%s\n",systemSize[0],systemSize[1],masterPassword);// write row, column and masterpassword
+	
+	/*write the storage information lines*/
+	for(i=0;i<systemSize[0];i++){ //i:row #
+		for(j=0;j<systemSize[1];j++){//j:column#
+			if(deliverySystem[i][j].cnt!=0)//if the cell is not empty
 				fprintf(fp,"%d %d %d %d %s %s\n",i,j,deliverySystem[i][j].building,deliverySystem[i][j].room,deliverySystem[i][j].passwd,deliverySystem[i][j].context);	
-		
 		}
 
 	}
@@ -118,32 +114,45 @@ int str_backupSystem(char* filepath) {
 //return : 0 - successfully created, -1 - failed to create the system
 int str_createSystem(char* filepath) {
 	FILE *fp;
-	fp=fopen(filepath,"r");
-	if(fp==NULL)
+	fp=fopen(filepath,"r");//open the file in read mode
+	if (fp==NULL)
 		return -1;
 	
-	fscanf(fp,"%d %d\n%s",&systemSize[0],&systemSize[1],masterPassword);
-	deliverySystem=malloc(systemSize[0]*sizeof(storage_t));//storage_t 사이즈의 row개 메모리를 만든다. 
-//deliverySystem은 row의 첫번재 주소를 가리키고있다.  
+	fscanf(fp,"%d %d\n%s\n",&systemSize[0],&systemSize[1],masterPassword);//read the first two lines as systemsize and masterpassword
+	deliverySystem = malloc(systemSize[0]*sizeof(storage_t*));//allocate system row size of storage_t* 
 	
 	int i,j;
 	for (i=0;i<systemSize[0];i++){
-		deliverySystem[i]=malloc(systemSize[1]*sizeof(storage_t));//i번째 row에 column개의 storage_T를생성 
+		//deliverysystem[i] would be the pointer of ith row storage_t array
+		deliverySystem[i]=malloc(systemSize[1]*sizeof(storage_t));//allocate column storage_t to ith row pointer
 	}
 	
-	for(i=0;i<systemSize[0];i++){
-		for(j=0;j<systemSize[1];j++)
-			initStorage(i,j);	
+	for(i=0;i<systemSize[0];i++){//i:row #
+		for(j=0;j<systemSize[1];j++)//j:column #
+			initStorage(i,j);	//initialize all the storages
 	}
 	
+	if (deliverySystem==NULL)
+		return -1;
 
-	int row;
-	int col;
-	char c;
+	int row;//row: the row number of each line in the file
+	int col;//col: the column number of each line in the file
+
+	char c;//used to check the EOF
 	do{
-		fscanf(fp,"%d %d %d %d %s %s",&row,&col,&deliverySystem[row][col].building,&deliverySystem[row][col].room,deliverySystem[row][col].passwd,deliverySystem[row][col].context);
-		deliverySystem[row][col].cnt++;
-	}while((c=fgetc(fp))!=EOF);
+		fscanf(fp,"%d %d",&row,&col);//scanf which row and column to put from the file
+		/*scanf storage informations from the file*/
+		fscanf(fp,"%d %d %s %s",&deliverySystem[row][col].building,&deliverySystem[row][col].room,deliverySystem[row][col].passwd,deliverySystem[row][col].context);
+		deliverySystem[row][col].cnt=1; //the storage cell is filled
+
+	} while((c=fgetc(fp))!=EOF);//until c get EOF
+	
+	for(i=0;i<systemSize[0];i++){ //i:row#, j:column#
+		for(j=0;j<systemSize[1];j++){
+			if(deliverySystem[i][j].cnt==1)//if the cell is occupied, storedCnt increases by 1
+			storedCnt++;
+		}
+	}
 	
 	fclose(fp);
 	
@@ -152,12 +161,13 @@ int str_createSystem(char* filepath) {
 
 //free the memory of the deliverySystem 
 void str_freeSystem(void) {
-	int i,j;
-	for(i=0;i<systemSize[0];i++){
-		free(deliverySystem[i]);
+	int i,j;//i: row number j: column number of storage 
+	for(i=0;i<systemSize[0];i++){//for each storage cells
 		for (j=0;j<systemSize[1];j++)
-			free(deliverySystem[i][j].context);
+			free(deliverySystem[i][j].context);//free the context of the storage
+			free(deliverySystem[i]); //free the storage cells
 	}
+	free(deliverySystem);//free the storage_t pointer memories
 }
 
 
@@ -223,11 +233,14 @@ int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_S
 	if (deliverySystem==NULL)
 	return -1;
 	
-	deliverySystem[x][y].building=nBuilding;
-	deliverySystem[x][y].room=nRoom;
-	strcpy(deliverySystem[x][y].passwd,passwd);
-	strcpy(deliverySystem[x][y].context,msg);
-	deliverySystem[x][y].cnt++;
+	deliverySystem[x][y].building=nBuilding;//put nBuilding to the storage cell
+	deliverySystem[x][y].room=nRoom;// put nRoom to the storage cell
+	
+	strcpy(deliverySystem[x][y].passwd,passwd);//copy the password just got input to the storage cell
+	strcpy(deliverySystem[x][y].context,msg);//copy the msg just input to the storage cell
+	
+	deliverySystem[x][y].cnt=1;// the storage cell is filled
+	storedCnt++;// the whole number of occpied cell increases by 1
 	
 	return 0;
 }
@@ -239,20 +252,23 @@ int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_S
 //int x, int y : coordinate of the cell to extract
 //return : 0 - successfully extracted, -1 = failed to extract
 int str_extractStorage(int x, int y) {
-	char pass[PASSWD_LEN+1];
-	
+	char pass[PASSWD_LEN+1];//pass: the password the extracting user just input
+	printf(" - input password: ");
 	scanf("%s",pass);
 	
-	if (strcmp(pass,deliverySystem[x][y].passwd)==0)
+	if (strcmp(pass,deliverySystem[x][y].passwd)==0||strcmp(pass,masterPassword)==0){
+	//if the password just input and the correct password are the same,or the user input the master password
+	
+		printf("messsage: %s",deliverySystem[x][y].context); //print the message from the storage cell
+		
+		initStorage(x,y);//initialize the extracted cell
+		storedCnt--;// the whole number of occpied cell increases by 1
+		
+		return 0;
+		
+		}
+	
 	return -1;
-	
-	printf("messsage: %s",deliverySystem[x][y].context);
-	
-	initStorage(x,y);
-	
-	
-	return 0;
-	
 }
 
 //find my package from the storage
@@ -260,18 +276,14 @@ int str_extractStorage(int x, int y) {
 //int nBuilding, int nRoom : my building/room numbers
 //return : number of packages that the storage system has
 int str_findStorage(int nBuilding, int nRoom) {
-	printf("building #: ");
-	scanf("%d",nBuilding);
-	printf("room #:");
-	scanf("%d",nRoom);
-	int i,j;
-	int numberofPackages=0;
-	for(i=0;i<systemSize[0];i++){
+	int i,j;//i is row number, and j is column number
+	int numberofPackages=0;//the number of packages which the finder has
+	for(i=0;i<systemSize[0];i++){//check all the storage cells for the input building and room number 
 		for(j=0;j<systemSize[1];j++){
-			if(deliverySystem[i][j].building==nBuilding&&deliverySystem[i][j].room==nRoom){
+			if(deliverySystem[i][j].building==nBuilding&&deliverySystem[i][j].room==nRoom){//if a cell corresponding is found
 				
-				printf("Found a package in (%d,%d)",i,j);
-				numberofPackages++;
+				printf(" - Found a package in (%d,%d) ",i,j);//print the row and column number of the cell
+				numberofPackages++;//the number of package of the finder is increased 1.
 			}
 		}
 		
