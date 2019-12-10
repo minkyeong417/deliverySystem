@@ -156,7 +156,11 @@ int str_createSystem(char* filepath) {
 	fscanf(fp,"%d %d\n%s\n",&systemSize[0],&systemSize[1],masterPassword);
 	
 	//allocate system row size of storage_t* 
-	deliverySystem = malloc(systemSize[0]*sizeof(storage_t*));
+	deliverySystem = (storage_t**) malloc(systemSize[0]*sizeof(storage_t*));
+	
+	if (deliverySystem==NULL)
+		return -1;
+		
 	
 	//int i, j are cell coordinate to be initialized
 	int i,j; 
@@ -164,8 +168,10 @@ int str_createSystem(char* filepath) {
 	for (i = 0; i < systemSize[0]; i++){
 		
 		//deliverysystem[i] would be the pointer of ith row storage_t array
-		deliverySystem[i] = malloc(systemSize[1]*sizeof(storage_t));//allocate column storage_t to ith row pointer
+		deliverySystem[i] = (storage_t*) malloc(systemSize[1]*sizeof(storage_t));//allocate column storage_t to ith row pointer
+
 	}
+	
 	
 	
 	for(i = 0; i < systemSize[0]; i++){
@@ -194,27 +200,30 @@ int str_createSystem(char* filepath) {
 		
 		/*scan storage informations*/
 		
-		fscanf(fp,"%d %d %s",&deliverySystem[row][col].building,&deliverySystem[row][col].room,deliverySystem[row][col].passwd);
+		fscanf(fp,"%d %d %s ",&deliverySystem[row][col].building,&deliverySystem[row][col].room,deliverySystem[row][col].passwd);
 		
-		deliverySystem[row][col].context=malloc(sizeof(char));
+		deliverySystem[row][col].context= (char*) malloc(2*sizeof(char));
 		
-		char d;
+		if (deliverySystem[row][col].context==NULL)
+			return -1;
 		
+	
 		//int context_length : length of the input context;
 		int context_length=1;
-		while ((d=fgetc(fp))!='\n'){
+		while ((c=fgetc(fp)) != '\n'&& c != EOF){
 			
 			if (context_length>1)
-				deliverySystem[row][col].context=(char*)realloc(context_length,sizeof(char));
-			deliverySystem[row][col].context[context_length-1]=d;
+				deliverySystem[row][col].context = (char*) realloc(deliverySystem[row][col].context,(context_length+1)*sizeof(char));
+			deliverySystem[row][col].context[context_length-1]=c;
 			context_length++;
 					
 		}
 		
+		deliverySystem[row][col].context[context_length-1]='\0';
 		//the storage cell is filled
 		deliverySystem[row][col].cnt = 1; 
 
-	} while((c = fgetc(fp)) != EOF);//until c get EOF
+	} while(c != EOF);//until c get EOF
 	
 	/*count how many cells are occupied in this whole delivery system*/
 	//int i,j : cell coordinate to count occupied cells
@@ -329,10 +338,10 @@ int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_S
 	//copy the msg just input to the storage cell
 	//array pointer
 	
-	char (*msg_ptr)[MAX_MSG_SIZE+1];
-	deliverySystem[x][y].context=realloc(strlen(*msg_ptr),sizeof(char));
+
+	deliverySystem[x][y].context= (char*) malloc((strlen(msg)+1)*sizeof(char));
 	
-	strcpy(deliverySystem[x][y].context,*msg_ptr);
+	strcpy(deliverySystem[x][y].context,msg);
 	
 	// the storage cell is filled
 	deliverySystem[x][y].cnt = 1;
@@ -362,6 +371,10 @@ int str_extractStorage(int x, int y) {
 		
 		//initialize the extracted cell
 		initStorage(x,y);
+		
+		//free context memory
+		
+		free(deliverySystem[x][y].context);
 		
 		//the number of occpied cells in the whole system decreases by 1
 		storedCnt--;
