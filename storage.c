@@ -58,9 +58,6 @@ static void initStorage(int x, int y) {
 	//the cell is empty
 	deliverySystem[x][y].cnt = 0;
 	
-	//allocate 100chars to context
-	deliverySystem[x][y].context = malloc(100*sizeof(char));
-	
 	deliverySystem[x][y].room = 0;
 	
 	//int i is to set ith element of passwd 0
@@ -197,7 +194,19 @@ int str_createSystem(char* filepath) {
 		
 		/*scan storage informations*/
 		
-		fscanf(fp,"%d %d %s %s",&deliverySystem[row][col].building,&deliverySystem[row][col].room,deliverySystem[row][col].passwd,deliverySystem[row][col].context);
+		fscanf(fp,"%d %d %s",&deliverySystem[row][col].building,&deliverySystem[row][col].room,deliverySystem[row][col].passwd);
+		
+		deliverySystem[row][col].context=malloc(sizeof(char));
+		
+		char d;
+		int context_length=1;
+		while ((d=fgetc(fp))!='\n'){
+			
+			deliverySystem[row][col].context=(char*)realloc(context_length,sizeof(char));
+			deliverySystem[row][col].context[context_length-1]=d;
+			context_length++;
+					
+		}
 		
 		//the storage cell is filled
 		deliverySystem[row][col].cnt = 1; 
@@ -315,7 +324,12 @@ int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_S
 	
 	
 	//copy the msg just input to the storage cell
-	strcpy(deliverySystem[x][y].context,msg);
+	//array pointer
+	
+	char (*msg_ptr)[MAX_MSG_SIZE+1];
+	deliverySystem[x][y].context=realloc(strlen(*msg_ptr),sizeof(char));
+	
+	strcpy(deliverySystem[x][y].context,msg_ptr);
 	
 	// the storage cell is filled
 	deliverySystem[x][y].cnt = 1;
