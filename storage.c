@@ -199,10 +199,13 @@ int str_createSystem(char* filepath) {
 		deliverySystem[row][col].context=malloc(sizeof(char));
 		
 		char d;
+		
+		//int context_length : length of the input context;
 		int context_length=1;
 		while ((d=fgetc(fp))!='\n'){
 			
-			deliverySystem[row][col].context=(char*)realloc(context_length,sizeof(char));
+			if (context_length>1)
+				deliverySystem[row][col].context=(char*)realloc(context_length,sizeof(char));
 			deliverySystem[row][col].context[context_length-1]=d;
 			context_length++;
 					
@@ -329,7 +332,7 @@ int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_S
 	char (*msg_ptr)[MAX_MSG_SIZE+1];
 	deliverySystem[x][y].context=realloc(strlen(*msg_ptr),sizeof(char));
 	
-	strcpy(deliverySystem[x][y].context,msg_ptr);
+	strcpy(deliverySystem[x][y].context,*msg_ptr);
 	
 	// the storage cell is filled
 	deliverySystem[x][y].cnt = 1;
