@@ -219,7 +219,9 @@ int str_createSystem(char* filepath) {
 					
 		}
 		
-		deliverySystem[row][col].context[context_length-1]='\0';
+		context_length--;
+		
+		deliverySystem[row][col].context[context_length]='\0';
 		//the storage cell is filled
 		deliverySystem[row][col].cnt = 1; 
 
@@ -252,8 +254,11 @@ void str_freeSystem(void) {
 	//for each storage cells
 	
 	for(i = 0; i < systemSize[0]; i++){
-		for (j = 0; j < systemSize[1]; j++)
-			free(deliverySystem[i][j].context);//free the context of the storage
+		for (j = 0; j < systemSize[1]; j++){
+			if (deliverySystem[i][j].cnt != 0)
+				free(deliverySystem[i][j].context);//free the context of the storag	
+		}
+		
 			
 			free(deliverySystem[i]); //free the storage cells
 	}
@@ -373,6 +378,7 @@ int str_extractStorage(int x, int y) {
 		initStorage(x,y);
 		
 		//free context memory
+		
 		
 		free(deliverySystem[x][y].context);
 		
