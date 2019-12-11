@@ -60,6 +60,7 @@ static void initStorage(int x, int y) {
 	
 	deliverySystem[x][y].room = 0;
 	
+	deliverySystem[x][y].context = NULL;
 	//int i is to set ith element of passwd 0
 	int i;
 	
@@ -194,38 +195,29 @@ int str_createSystem(char* filepath) {
 	
 	// char c is used to check the EOF
 	char c;
+	char scanstring[100];
+	
 	do{
 		//scan the coordinate to put 
-		fscanf(fp,"%d %d",&row,&col);
 		
+		if (fscanf(fp,"%d %d ",&row, &col) == EOF)
+			break;
 		/*scan storage informations*/
 		
-		fscanf(fp,"%d %d %s ",&deliverySystem[row][col].building,&deliverySystem[row][col].room,deliverySystem[row][col].passwd);
+		fscanf(fp,"%d %d %s %s",&deliverySystem[row][col].building,&deliverySystem[row][col].room,deliverySystem[row][col].passwd,scanstring);
 		
-		deliverySystem[row][col].context= (char*) malloc(2*sizeof(char));
-		
-		if (deliverySystem[row][col].context==NULL)
-			return -1;
 		
 	
 		//int context_length : length of the input context;
-		int context_length=1;
-		while ((c=fgetc(fp)) != '\n'&& c != EOF){
-			
-			if (context_length>1)
-				deliverySystem[row][col].context = (char*) realloc(deliverySystem[row][col].context,(context_length+1)*sizeof(char));
-			deliverySystem[row][col].context[context_length-1]=c;
-			context_length++;
-					
-		}
+	
+		deliverySystem[row][col].context = malloc((strlen(scanstring)+1)*sizeof(char));
 		
-		context_length--;
+		strcpy(deliverySystem[row][col].context,scanstring);
 		
-		deliverySystem[row][col].context[context_length]='\0';
 		//the storage cell is filled
 		deliverySystem[row][col].cnt = 1; 
 
-	} while(c != EOF);//until c get EOF
+	} while(1);//until c get EOF
 	
 	/*count how many cells are occupied in this whole delivery system*/
 	//int i,j : cell coordinate to count occupied cells
@@ -341,9 +333,8 @@ int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_S
 	
 	
 	//copy the msg just input to the storage cell
-	//array pointer
 	
-
+	
 	deliverySystem[x][y].context= (char*) malloc((strlen(msg)+1)*sizeof(char));
 	
 	strcpy(deliverySystem[x][y].context,msg);
