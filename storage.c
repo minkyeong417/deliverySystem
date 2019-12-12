@@ -169,8 +169,11 @@ int str_createSystem(char* filepath) {
 	for (i = 0; i < systemSize[0]; i++){
 		
 		//deliverysystem[i] would be the pointer of ith row storage_t array
+		//allocate memory of systemsize[1] of storage
 		deliverySystem[i] = (storage_t*) malloc(systemSize[1]*sizeof(storage_t));//allocate column storage_t to ith row pointer
 
+		if (deliverySystem[i] == NULL)
+			return -1;
 	}
 	
 	
@@ -183,8 +186,7 @@ int str_createSystem(char* filepath) {
 			
 	}
 	
-	if (deliverySystem == NULL)
-		return -1;
+
 
 	/*read from the third line of the file until you get EOF*/
 	
@@ -208,10 +210,10 @@ int str_createSystem(char* filepath) {
 		
 		
 	
-		//int context_length : length of the input context;
-	
+		// allocate memory of size of string length of the input msg
 		deliverySystem[row][col].context = malloc((strlen(scanstring)+1)*sizeof(char));
 		
+		//copy the scanstring to deliverySystem context
 		strcpy(deliverySystem[row][col].context,scanstring);
 		
 		//the storage cell is filled
@@ -248,7 +250,7 @@ void str_freeSystem(void) {
 	for(i = 0; i < systemSize[0]; i++){
 		for (j = 0; j < systemSize[1]; j++){
 			if (deliverySystem[i][j].cnt != 0)
-				free(deliverySystem[i][j].context);//free the context of the storag	
+				free(deliverySystem[i][j].context);//free the context of the storage
 		}
 		
 			
@@ -332,11 +334,10 @@ int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_S
 	strcpy(deliverySystem[x][y].passwd,passwd);
 	
 	
-	//copy the msg just input to the storage cell
-	
-	
+	//allocate memory of the size of string length of msg to context
 	deliverySystem[x][y].context= (char*) malloc((strlen(msg)+1)*sizeof(char));
 	
+	//copy the input msg to context
 	strcpy(deliverySystem[x][y].context,msg);
 	
 	// the storage cell is filled
@@ -369,8 +370,6 @@ int str_extractStorage(int x, int y) {
 		initStorage(x,y);
 		
 		//free context memory
-		
-		
 		free(deliverySystem[x][y].context);
 		
 		//the number of occpied cells in the whole system decreases by 1
